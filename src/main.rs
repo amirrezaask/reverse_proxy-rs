@@ -8,16 +8,18 @@ fn get_dst_host(req: &Request<Body>) -> String {
     let _dst = req.uri().path_and_query().unwrap().path();
     let dst = _dst.to_owned();
     // dst.split_at(1).1.to_owned()
-    format!("{}{}", "https://httpbin.org", dst)
+    format!("{}", "http://httpbin.org/anything")
 }
 
 async fn pass(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let client = Client::new();
-    println!("{}", get_dst_host(&_req));
-    let mut req = Request::new(Body::default());
-    *req.uri_mut() = get_dst_host(&_req).parse().unwrap();
-    let resp = client.request(req).await.unwrap_or_default();
-    println!("{:?}", resp);
+    let uri = get_dst_host(&_req).parse().unwrap();
+    let (parts, body) = _req.into_parts();
+    let mut req = Request::new(body);
+    *req.method_mut() = parts.method;
+    *req.uri_mut() = uri;
+    *req.headers_mut() = parts.headers;
+    let resp = client.request(req).await.unwrap();
     Ok(resp)
 }
 
