@@ -7,19 +7,21 @@ use std::net::SocketAddr;
 fn get_dst_host(req: &Request<Body>) -> String {
     let _dst = req.uri().path_and_query().unwrap().path();
     let dst = _dst.to_owned();
-    // dst.split_at(1).1.to_owned()
-    format!("{}", "http://httpbin.org/anything")
+    format!("http://{}", dst.split_at(1).1.to_owned())
+    // format!("{}", "http://httpbin.org/anything")
 }
 
 async fn pass(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let client = Client::new();
     let uri = get_dst_host(&_req).parse().unwrap();
+    println!("{}", uri);
     let (parts, body) = _req.into_parts();
     let mut req = Request::new(body);
     *req.method_mut() = parts.method;
     *req.uri_mut() = uri;
     *req.headers_mut() = parts.headers;
     let resp = client.request(req).await.unwrap();
+    println!("{:?}", resp);
     Ok(resp)
 }
 
